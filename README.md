@@ -1,75 +1,121 @@
-# 💸 FinGuard
+# FinGuard
 
-**Shop smarter. Stay safer. Build better financial habits.**
+**Winner — Best Capital One Hack (Capital Finance Track), Bitcamp 2025**
 
----
+FinGuard is a Chrome extension plus web dashboard that watches out for you while you shop online. As you browse, it checks every site you land on for phishing, malware, and scam signals, and warns you in plain English before you type in a card number. At checkout it tells you which of your credit cards earns the most on that purchase, and the dashboard ties it all together with spending analytics, fraud monitoring, and an AI assistant that answers questions about your own transactions.
 
-## 🔥 Inspiration
+Built by a team of four at [Bitcamp 2025](https://bitca.mp/), the University of Maryland's hackathon.
 
-We realized how often people leave money on the table by not using the best credit card for purchases. But that’s just the tip of the iceberg. Many users fall victim to scam websites, accidentally overspend, or simply don’t understand where their money is going each month. With so many credit card reward programs, sketchy merchants, and confusing spending patterns, there’s a real need for a tool that simplifies everything.
+## What it does
 
-That’s what inspired us to create **FinGuard** — a tool to help users shop smarter, stay safer online, and gain awareness of their spending habits to build a healthier financial future.
+- **Real-time scam and phishing warnings.** The extension's background worker watches every page load and asks the FinGuard server whether the site is risky. The server runs the URL through IPQS (IP Quality Score) reputation checks for phishing, malware, spamming, and suspicious signals, and uses Gemini to classify gambling sites. If anything comes back positive, Gemini writes a short, non-technical "nudge" that slides into the page as a popup — no jargon, just why you should be careful.
+- **Best-card recommendations.** Tell the extension what you're buying (or let Gemini categorize the merchant for you) and it compares reward rates and active offers across your linked cards to pick the one that earns the most, with one-click autofill of the card details at checkout.
+- **Fraud monitoring on the dashboard.** The backend screens transactions against known phishing domains, suspicious URL patterns, and high-risk geographies, and supports flagging, approval flows, and per-card security settings.
+- **Spending analytics.** Category breakdowns, merchant analysis, spending trends, budget tracking, and reward-optimization views, powered by real transaction data pulled through Plaid and the Capital One Nessie API.
+- **An AI financial assistant.** A chatbot on the analytics screen that receives your recent transactions, cards, top categories, and top merchants as context, so it can answer questions like "where did most of my money go this month?" or "does anything here look fraudulent?"
 
----
+## How it's wired together
 
-## 💡 What It Does
+The repo has four moving parts:
 
-**FinGuard** is a browser extension and web dashboard that helps users spend smarter, stay safer, and build better financial habits.
+```
+Chrome Extension (React + Vite, Manifest V3)
+      │  page URLs, card/category requests
+      ▼
+Extension Server (Express, :3000) ──► Nudge engine ──► IPQS + Gemini 1.5 Flash
+      │                                                (scam check + nudge text)
+      ▼
+MongoDB Atlas  (card catalog, reward rates, offers, transactions)
+      ▲
+      │  populated by cardServer.py (Selenium + BeautifulSoup scraper)
 
-Here’s what it does:
+Dashboard (React + Tailwind)
+      │
+      ▼
+Backend API (Express, :5000) ──► Plaid (bank linking) ─► Supabase (accounts, txns)
+                             ──► Capital One Nessie API (banking sandbox data)
+                             ──► Gemini 2.0 Flash (chatbot + AI insights)
+                             ──► Phishing protection service (rule-based screening)
+```
 
-- **Recommends** the best credit card for each purchase based on the user's linked credit cards, including rewards, points, and active discounts.
-- **Warns** users about scam or unsafe websites using site reputation checks.
-- **Tracks** spending by category.
-- Provides a **financial dashboard** showing income, expenses, savings, and cashback earned.
-- **Analyzes** spending patterns to help users understand their habits and avoid overspending.
+| Directory | What it is |
+|---|---|
+| `Chrome Extension/` | Manifest V3 extension. React 19 popup (card picker, autofill, Gemini merchant categorization), background service worker that requests nudges on every page load, content script that renders the warning popup in-page. |
+| `Server/` | Express server the extension talks to. Best-card lookup against MongoDB, card details for autofill, transaction logging, and the `/generateNudge` endpoint. |
+| `Nudge/` | The safety-nudge engine (JS and Python versions). IPQS URL reputation plus Gemini 1.5 Flash for gambling classification and for writing the user-facing warning. |
+| `Backend/` | Express API for the dashboard. Plaid integration, Supabase persistence, Nessie API routes, Gemini-powered chatbot and insights, card/transaction security routes. |
+| `Dashboard/` | React web app: analytics, card management, Plaid linking, payments, rewards, and security screens. |
+| `cardServer.py` | Python scraper (Selenium + BeautifulSoup) that pulls credit-card reward rates and offers from issuer sites into MongoDB Atlas. |
 
----
+## Tech stack
 
-## 🛠️ How We Built It
+- **Frontend:** React 19, Tailwind CSS, Chart.js, Framer Motion; Vite for the extension build, Chrome Manifest V3
+- **Backend:** Node.js + Express (two services), Python for the scraper and the alternate nudge implementation
+- **AI:** Google Gemini — 1.5 Flash for site classification and nudge generation, 2.0 Flash for the financial chatbot, spending insights, and merchant categorization
+- **Data:** MongoDB Atlas (card catalog, rewards, offers, transactions), Supabase/Postgres (users, Plaid items, accounts, synced transactions)
+- **External APIs:** IPQS (URL reputation), Plaid (bank account linking), Capital One Nessie API (banking sandbox)
 
-### 🔌 Browser Extension
+## Running it locally
 
-- **Frontend:** Built using React, CSS, and JavaScript. React handles dynamic UI components to ensure smooth and responsive interactions.
-- **Card Recommendations:** We fetch card-specific recommendations from MongoDB, where we store information about different credit cards, including rewards, points, and active discounts, to provide the best suggestions for each purchase.
-- **Site Scam Checker (Nudge):** We used **IPQS (IP Quality Score)** for our Nudge feature, which checks the reputation of websites and alerts users if a site is unsafe. This feature warns users about scammy or potentially malicious websites by showing a “nudge” message when the site is flagged.
+You'll need Node 18+, Python 3.11+ (only for the scraper), and API keys for Gemini and IPQS, plus optionally Plaid and Nessie.
 
-### 📊 Web Dashboard
+**1. Extension server** (powers the extension: nudges + card recommendations)
 
-- **Frontend:** Built with React and TailwindCSS, offering a dynamic and responsive UI that allows users to interact with real-time financial data and insights efficiently.
-- **Backend:** **Node.js** was used for the backend, handling user authentication, data processing, and interactions with external APIs.
-- **RAG Model (Gemini):** We integrated **Gemini** to use a **RAG (Retrieval-Augmented Generation)** model that analyzes user transaction data. This helps us provide personalized financial insights, answer user queries about spending, and offer suggestions based on transaction history.
-- **Insights Recharge:** We used **Insights Recharge** to provide advanced data analysis, allowing users to gain deep insights into their spending patterns and make smarter financial decisions.
-- **Database:** **MongoDB** was chosen for its flexibility and scalability in storing user profiles, transaction data, and card details.
+```bash
+cd Server
+npm install
+# copy .env.example to .env and fill in your Gemini and IPQS keys
+node server.js        # runs on :3000
+```
 
----
+**2. Chrome extension**
 
-## ✨ Nudge: Behavioral Design for Finance
+```bash
+cd "Chrome Extension"
+npm install
+npm run build
+```
 
-Our project leverages the behavioral economics principle of "nudging" to promote financial well-being. Recognizing that people often struggle with financial planning due to inertia or overwhelming choices, we designed a user-friendly application that subtly guides users toward healthier financial habits.
+Then open `chrome://extensions`, enable Developer mode, click "Load unpacked," and select the `Chrome Extension/dist` folder.
 
-By implementing intuitive default options such as automatic enrollment in savings plans, our app encourages consistent saving without restricting individual choice. Additionally, we utilized framing techniques to present financial information positively, making users more comfortable with beneficial financial decisions.
+**3. Dashboard backend**
 
-We also included clear visual cues and personalized notifications to reinforce productive behaviors, like budgeting or timely bill payments. Through these subtle yet impactful adjustments, users naturally adopt better financial habits without feeling pressured or coerced.
+```bash
+cd Backend
+npm install
+npm run dev           # runs on :5000
+```
 
----
+Environment variables it reads: `GEMINI_API_KEY`, `PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ENV`, `NESSIE_API_KEY`, `MONGODB_URI`, `MONGODB_DB`.
 
-## 🚀 The Vision
+**4. Dashboard**
 
-**FinGuard** isn’t just a product — it’s a mission:
+```bash
+cd Dashboard
+npm install
+npm start
+```
 
-- To make online shopping safer.
-- To turn complex financial data into clear, actionable insights.
-- To empower people to take control of their finances with confidence.
+Set `REACT_APP_API_URL`, `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY`, and `REACT_APP_PLAID_ENV` in `Dashboard/.env`.
 
----
+**5. (Optional) Card rewards scraper**
 
-## 🧠 Tech Stack
+```bash
+pip install pymongo selenium beautifulsoup4
+python cardServer.py
+```
 
-| Frontend        | Backend       | AI/ML      | Database  | External APIs |
-|-----------------|---------------|------------|-----------|----------------|
-| React + TailwindCSS | Node.js       | Gemini (RAG), Insights Recharge | MongoDB   | IPQS (IP Quality Score) |
+Requires ChromeDriver and a MongoDB Atlas connection string.
 
----
+Note: this is a hackathon build. Some demo data, test card numbers, and shortcuts are baked in, and the two servers expect to run on localhost.
 
-## 🙌 Made with ❤️, passion, and way too many energy drinks.
+## Team
+
+FinGuard was built at Bitcamp 2025 by:
+
+- [Ishaan Narang](https://github.com/Ishaannarang22)
+- [Mantavya](https://github.com/mantavya0807)
+- [Manchi0](https://github.com/Manchi0)
+- [Shreyansh](https://github.com/Nailfighter)
+
+Original repository: [mantavya0807/FinGuard](https://github.com/mantavya0807/FinGuard)
