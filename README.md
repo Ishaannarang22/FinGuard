@@ -1,6 +1,6 @@
 # FinGuard
 
-**Winner — Best Capital One Hack (Capital Finance Track), Bitcamp 2025**
+**Winner: Best Capital One Hack (Capital Finance Track), Bitcamp 2025**
 
 FinGuard is a Chrome extension plus web dashboard that watches out for you while you shop online. As you browse, it checks every site you land on for phishing, malware, and scam signals, and warns you in plain English before you type in a card number. At checkout it tells you which of your credit cards earns the most on that purchase, and the dashboard ties it all together with spending analytics, fraud monitoring, and an AI assistant that answers questions about your own transactions.
 
@@ -8,7 +8,7 @@ Built by a team of four at [Bitcamp 2025](https://bitca.mp/), the University of 
 
 ## What it does
 
-- **Real-time scam and phishing warnings.** The extension's background worker watches every page load and asks the FinGuard server whether the site is risky. The server runs the URL through IPQS (IP Quality Score) reputation checks for phishing, malware, spamming, and suspicious signals, and uses Gemini to classify gambling sites. If anything comes back positive, Gemini writes a short, non-technical "nudge" that slides into the page as a popup — no jargon, just why you should be careful.
+- **Real-time scam and phishing warnings.** The extension's background worker watches every page load and asks the FinGuard server whether the site is risky. The server runs the URL through IPQS (IP Quality Score) reputation checks for phishing, malware, spamming, and suspicious signals, and uses Gemini to classify gambling sites. If anything comes back positive, Gemini writes a short, non-technical "nudge" that slides into the page as a popup: no jargon, just why you should be careful.
 - **Best-card recommendations.** Tell the extension what you're buying (or let Gemini categorize the merchant for you) and it compares reward rates and active offers across your linked cards to pick the one that earns the most, with one-click autofill of the card details at checkout.
 - **Fraud monitoring on the dashboard.** The backend screens transactions against known phishing domains, suspicious URL patterns, and high-risk geographies, and supports flagging, approval flows, and per-card security settings.
 - **Spending analytics.** Category breakdowns, merchant analysis, spending trends, budget tracking, and reward-optimization views, powered by real transaction data pulled through Plaid and the Capital One Nessie API.
@@ -51,7 +51,7 @@ Backend API (Express, :5000) ──► Plaid (bank linking) ─► Supabase (acc
 
 - **Frontend:** React 19, Tailwind CSS, Chart.js, Framer Motion; Vite for the extension build, Chrome Manifest V3
 - **Backend:** Node.js + Express (two services), Python for the scraper and the alternate nudge implementation
-- **AI:** Google Gemini — 1.5 Flash for site classification and nudge generation, 2.0 Flash for the financial chatbot, spending insights, and merchant categorization
+- **AI:** Google Gemini (1.5 Flash for site classification and nudge generation, 2.0 Flash for the financial chatbot, spending insights, and merchant categorization)
 - **Data:** MongoDB Atlas (card catalog, rewards, offers, transactions), Supabase/Postgres (users, Plaid items, accounts, synced transactions)
 - **External APIs:** IPQS (URL reputation), Plaid (bank account linking), Capital One Nessie API (banking sandbox)
 
